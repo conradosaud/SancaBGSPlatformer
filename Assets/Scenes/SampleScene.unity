@@ -139,10 +139,19 @@ MonoBehaviour:
   hasGrapple: 1
   maxDistance: 50
   pullSpeed: 22
+  ropeShootSpeed: 60
   stopDistance: 1.2
+  originXOffset: 0.35
+  originYOffset: 1.2
   graspableLayer:
     serializedVersion: 2
     m_Bits: 0
+  hookHeadPrefab: {fileID: 2946329544023231600, guid: c8c281da53081e14c9c6e1fab8924f94, type: 3}
+  ropeMaterial: {fileID: 2100000, guid: e83e24eba852c1143ae8816d3570615a, type: 2}
+  startWidth: 0.08
+  endWidth: 0.08
+  ropeColor: {r: 1, g: 1, b: 1, a: 1}
+  isShootingRope: 0
   isGrappling: 0
 --- !u!114 &231158897
 MonoBehaviour:
@@ -159,6 +168,7 @@ MonoBehaviour:
   hasSuperJump: 1
   minChargeTime: 0.25
   maxChargeTime: 2
+  minPressDuration: 0.08
   cooldown: 0.5
   minJumpHeight: 1
   maxJumpHeight: 10

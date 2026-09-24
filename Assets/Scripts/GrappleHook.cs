@@ -16,13 +16,34 @@ namespace SancaBGSPlatformer
         [Tooltip("Speed / force at which the player is pulled towards the grapple point.")]
         public float pullSpeed = 22f;
 
+        [Tooltip("Speed of the grapple line extending outwards to the target.")]
+        public float ropeShootSpeed = 60f;
+
         [Tooltip("Distance threshold to finish grapple.")]
         public float stopDistance = 1.2f;
+
+        [Tooltip("Horizontal origin offset (X) for the grapple line relative to player position (e.g. shoulder offset).")]
+        public float originXOffset = 0.35f;
+
+        [Tooltip("Vertical origin offset (Y) for the grapple line relative to player position.")]
+        public float originYOffset = 1.2f;
 
         [Tooltip("LayerMask containing Graspable objects.")]
         public LayerMask graspableLayer;
 
+        [Header("3D Hook Head Visual")]
+        [Tooltip("Optional 3D Prefab for the tip/head of the hook that travels to target and stays at anchor point.")]
+        public GameObject hookHeadPrefab;
+
+        [Header("Line Visuals")]
+        [Tooltip("Material for the LineRenderer rope.")]
+        public Material ropeMaterial;
+        public float startWidth = 0.08f;
+        public float endWidth = 0.08f;
+        public Color ropeColor = Color.cyan;
+
         [Header("State")]
+        public bool isShootingRope = false;
         public bool isGrappling = false;
 
         private CharacterController _characterController;
@@ -31,7 +52,11 @@ namespace SancaBGSPlatformer
         private SuperJump _superJump;
         private Animator _animator;
         private Camera _mainCamera;
+        private LineRenderer _lineRenderer;
+
         private Vector3 _targetPoint;
+        private Vector3 _currentRopeTip;
+        private GameObject _hookHeadInstance;
 
         private void Awake()
         {
@@ -46,6 +71,39 @@ namespace SancaBGSPlatformer
             {
                 graspableLayer = LayerMask.GetMask("Graspable");
             }
+
+            SetupLineRenderer();
+        }
+
+        private void SetupLineRenderer()
+        {
+            _lineRenderer = GetComponent<LineRenderer>();
+            if (_lineRenderer == null)
+            {
+                _lineRenderer = gameObject.AddComponent<LineRenderer>();
+            }
+
+            _lineRenderer.positionCount = 2;
+            _lineRenderer.startWidth = startWidth;
+            _lineRenderer.endWidth = endWidth;
+            _lineRenderer.enabled = false;
+
+            if (ropeMaterial != null)
+            {
+                _lineRenderer.material = ropeMaterial;
+            }
+            else
+            {
+                _lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+                _lineRenderer.startColor = ropeColor;
+                _lineRenderer.endColor = ropeColor;
+            }
+        }
+
+        public Vector3 GetOriginPosition()
+        {
+            // Calculates offset relative to character's local rotation (X = right/shoulder, Y = height)
+            return transform.position + (transform.right * originXOffset) + (transform.up * originYOffset);
         }
 
         private void Update()
@@ -71,7 +129,7 @@ namespace SancaBGSPlatformer
                 // Consume input so it doesn't repeatedly trigger
                 _inputs.grapple = false;
 
-                if (hasGrapple && !isGrappling)
+                if (hasGrapple && !isShootingRope && !isGrappling)
                 {
                     // Check if inside super jump: allowed only once
                     if (_superJump != null && _superJump.isSuperJumping)
@@ -88,7 +146,11 @@ namespace SancaBGSPlatformer
                 }
             }
 
-            if (isGrappling)
+            if (isShootingRope)
+            {
+                UpdateShootingRope();
+            }
+            else if (isGrappling)
             {
                 PullPlayer();
             }
@@ -103,14 +165,76 @@ namespace SancaBGSPlatformer
 
             if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, graspableLayer, QueryTriggerInteraction.Ignore))
             {
-                StartGrapple(hit.point);
+                StartShootingRope(hit.point);
             }
         }
 
-        private void StartGrapple(Vector3 destination)
+        private void StartShootingRope(Vector3 destination)
+        {
+            isShootingRope = true;
+            isGrappling = false;
+            _targetPoint = destination;
+            _currentRopeTip = GetOriginPosition();
+
+            // Destroy previous instance if any exists
+            if (_hookHeadInstance != null)
+            {
+                Destroy(_hookHeadInstance);
+            }
+
+            // Instantiate hook head prefab if assigned
+            if (hookHeadPrefab != null)
+            {
+                Vector3 launchDirection = (_targetPoint - _currentRopeTip);
+                Quaternion rot = launchDirection != Vector3.zero ? Quaternion.LookRotation(launchDirection) : transform.rotation;
+                _hookHeadInstance = Instantiate(hookHeadPrefab, _currentRopeTip, rot);
+            }
+
+            if (_lineRenderer != null)
+            {
+                _lineRenderer.enabled = true;
+                _lineRenderer.SetPosition(0, GetOriginPosition());
+                _lineRenderer.SetPosition(1, _currentRopeTip);
+            }
+        }
+
+        private void UpdateShootingRope()
+        {
+            // Player CAN move normally while the rope is extending towards target
+            Vector3 origin = GetOriginPosition();
+
+            // Move current rope tip toward target point
+            _currentRopeTip = Vector3.MoveTowards(_currentRopeTip, _targetPoint, ropeShootSpeed * Time.deltaTime);
+
+            // Update hook head object position & orientation
+            if (_hookHeadInstance != null)
+            {
+                _hookHeadInstance.transform.position = _currentRopeTip;
+                Vector3 launchDirection = (_targetPoint - origin);
+                if (launchDirection != Vector3.zero)
+                {
+                    _hookHeadInstance.transform.rotation = Quaternion.LookRotation(launchDirection);
+                }
+            }
+
+            if (_lineRenderer != null)
+            {
+                _lineRenderer.enabled = true;
+                _lineRenderer.SetPosition(0, origin);
+                _lineRenderer.SetPosition(1, _currentRopeTip);
+            }
+
+            // Reached target point -> Transition to Grappling / Pulling
+            if (Vector3.Distance(_currentRopeTip, _targetPoint) <= 0.05f)
+            {
+                isShootingRope = false;
+                StartPullingPlayer();
+            }
+        }
+
+        private void StartPullingPlayer()
         {
             isGrappling = true;
-            _targetPoint = destination;
 
             // If super jumping, cancel super jump immediately and record usage
             if (_superJump != null && _superJump.isSuperJumping)
@@ -133,7 +257,8 @@ namespace SancaBGSPlatformer
             }
 
             // Rotate character body immediately towards target point
-            Vector3 lookDirection = destination - transform.position;
+            Vector3 lookDirection = _targetPoint - transform.position;
+            lookDirection.y = 0; // maintain horizontal focus
             if (lookDirection != Vector3.zero)
             {
                 transform.rotation = Quaternion.LookRotation(lookDirection);
@@ -161,13 +286,30 @@ namespace SancaBGSPlatformer
                 _inputs.superJump = false;
             }
 
-            Vector3 direction = (_targetPoint - transform.position);
+            Vector3 origin = GetOriginPosition();
+            Vector3 direction = (_targetPoint - origin);
             float distance = direction.magnitude;
 
-            // Keep character facing target point while pulling
-            if (direction != Vector3.zero)
+            // Ensure hook head stays at target surface location while pulling
+            if (_hookHeadInstance != null)
             {
-                transform.rotation = Quaternion.LookRotation(direction);
+                _hookHeadInstance.transform.position = _targetPoint;
+            }
+
+            // Update LineRenderer as rope retracts while player moves towards target
+            if (_lineRenderer != null)
+            {
+                _lineRenderer.enabled = true;
+                _lineRenderer.SetPosition(0, origin);
+                _lineRenderer.SetPosition(1, _targetPoint);
+            }
+
+            // Keep character facing target point while pulling
+            Vector3 flatDirection = direction;
+            flatDirection.y = 0;
+            if (flatDirection != Vector3.zero)
+            {
+                transform.rotation = Quaternion.LookRotation(flatDirection);
             }
 
             // Keep InAir animation playing
@@ -210,9 +352,19 @@ namespace SancaBGSPlatformer
 
         public void StopGrapple()
         {
-            if (!isGrappling) return;
-
+            isShootingRope = false;
             isGrappling = false;
+
+            if (_hookHeadInstance != null)
+            {
+                Destroy(_hookHeadInstance);
+                _hookHeadInstance = null;
+            }
+
+            if (_lineRenderer != null)
+            {
+                _lineRenderer.enabled = false;
+            }
 
             if (_thirdPersonController != null)
             {
