@@ -13,6 +13,7 @@ namespace StarterAssets
 		public bool jump;
 		public bool sprint;
 		public bool grapple;
+		public bool superJump;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -49,6 +50,22 @@ namespace StarterAssets
 		{
 			GrappleInput(value.isPressed);
 		}
+
+		public void OnSuperJump(InputValue value)
+		{
+			// Handles both digital button isPressed and analog trigger (> 0.25f)
+			bool pressed = false;
+			try
+			{
+				float f = value.Get<float>();
+				pressed = f > 0.25f;
+			}
+			catch
+			{
+				pressed = value.isPressed;
+			}
+			SuperJumpInput(pressed);
+		}
 #endif
 
 
@@ -75,6 +92,11 @@ namespace StarterAssets
 		public void GrappleInput(bool newGrappleState)
 		{
 			grapple = newGrappleState;
+		}
+
+		public void SuperJumpInput(bool newSuperJumpState)
+		{
+			superJump = newSuperJumpState;
 		}
 		
 		private void OnApplicationFocus(bool hasFocus)

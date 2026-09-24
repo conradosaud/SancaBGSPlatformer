@@ -13,7 +13,7 @@ namespace SancaBGSPlatformer
         [Tooltip("Maximum range for the grapple raycast.")]
         public float maxDistance = 50f;
 
-        [Tooltip("Speed at which the player is pulled towards the grapple point.")]
+        [Tooltip("Speed / force at which the player is pulled towards the grapple point.")]
         public float pullSpeed = 22f;
 
         [Tooltip("Distance threshold to finish grapple.")]
@@ -28,6 +28,7 @@ namespace SancaBGSPlatformer
         private CharacterController _characterController;
         private ThirdPersonController _thirdPersonController;
         private StarterAssetsInputs _inputs;
+        private SuperJump _superJump;
         private Camera _mainCamera;
         private Vector3 _targetPoint;
 
@@ -36,6 +37,7 @@ namespace SancaBGSPlatformer
             _characterController = GetComponent<CharacterController>();
             _thirdPersonController = GetComponent<ThirdPersonController>();
             _inputs = GetComponent<StarterAssetsInputs>();
+            _superJump = GetComponent<SuperJump>();
             _mainCamera = Camera.main;
 
             if (graspableLayer == 0)
@@ -51,6 +53,11 @@ namespace SancaBGSPlatformer
                 _mainCamera = Camera.main;
             }
 
+            if (_superJump == null)
+            {
+                _superJump = GetComponent<SuperJump>();
+            }
+
             // Check for trigger input
             if (_inputs != null && _inputs.grapple)
             {
@@ -59,7 +66,18 @@ namespace SancaBGSPlatformer
 
                 if (hasGrapple && !isGrappling)
                 {
-                    TryLaunchGrapple();
+                    // Check if inside super jump: allowed only once
+                    if (_superJump != null && _superJump.isSuperJumping)
+                    {
+                        if (!_superJump.hasUsedGrappleInAir)
+                        {
+                            TryLaunchGrapple();
+                        }
+                    }
+                    else
+                    {
+                        TryLaunchGrapple();
+                    }
                 }
             }
 
@@ -87,6 +105,13 @@ namespace SancaBGSPlatformer
             isGrappling = true;
             _targetPoint = destination;
 
+            // If super jumping, cancel super jump immediately and record usage
+            if (_superJump != null && _superJump.isSuperJumping)
+            {
+                _superJump.hasUsedGrappleInAir = true;
+                _superJump.CancelSuperJump();
+            }
+
             if (_thirdPersonController != null)
             {
                 _thirdPersonController.ResetVerticalVelocity();
@@ -99,6 +124,7 @@ namespace SancaBGSPlatformer
                 _inputs.move = Vector2.zero;
                 _inputs.jump = false;
                 _inputs.sprint = false;
+                _inputs.superJump = false;
             }
         }
 
@@ -111,6 +137,7 @@ namespace SancaBGSPlatformer
                 _inputs.jump = false;
                 _inputs.sprint = false;
                 _inputs.grapple = false;
+                _inputs.superJump = false;
             }
 
             Vector3 direction = (_targetPoint - transform.position);

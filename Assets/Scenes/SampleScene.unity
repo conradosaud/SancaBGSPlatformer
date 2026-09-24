@@ -144,6 +144,28 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   isGrappling: 0
+--- !u!114 &231158897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 231158888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97e2dbe54ae17a04fa4351f6b7862ee1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SancaBGSPlatformer.SuperJump
+  hasSuperJump: 1
+  minChargeTime: 0.25
+  maxChargeTime: 2
+  cooldown: 0.5
+  minJumpHeight: 1
+  maxJumpHeight: 10
+  isCharging: 0
+  currentChargeTime: 0
+  isSuperJumping: 0
+  hasUsedGrappleInAir: 0
 --- !u!1001 &243045660
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -207,6 +229,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4416926081852918481, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       insertIndex: -1
       addedObject: {fileID: 231158896}
+    - targetCorrespondingSourceObject: {fileID: 4416926081852918481, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 231158897}
   m_SourcePrefab: {fileID: 100100000, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
 --- !u!4 &243045661 stripped
 Transform:
