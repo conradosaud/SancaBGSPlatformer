@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -80,12 +80,18 @@ namespace StarterAssets
         private float _cinemachineTargetPitch;
 
         // player
+        [HideInInspector] public bool isMovementLocked = false;
         private float _speed;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
         private float _rotationVelocity;
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
+
+        public void ResetVerticalVelocity()
+        {
+            _verticalVelocity = 0.0f;
+        }
 
         // timeout deltatime
         private float _jumpTimeoutDelta;
@@ -155,6 +161,11 @@ namespace StarterAssets
         private void Update()
         {
             _hasAnimator = TryGetComponent(out _animator);
+
+            if (isMovementLocked)
+            {
+                return;
+            }
 
             JumpAndGravity();
             GroundedCheck();
