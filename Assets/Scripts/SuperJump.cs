@@ -161,16 +161,16 @@ namespace SancaBGSPlatformer
         {
             _airTime += Time.deltaTime;
 
-            // Clear other action inputs except camera / look
+            // Clear other action inputs except camera / look and jump (needed for glide)
             if (_inputs != null)
             {
                 _inputs.move = Vector2.zero;
-                _inputs.jump = false;
                 _inputs.sprint = false;
             }
 
             float gravity = (_thirdPersonController != null) ? _thirdPersonController.Gravity : -15.0f;
-            _currentVerticalVelocity += gravity * Time.deltaTime;
+            float gravScale = (_thirdPersonController != null) ? _thirdPersonController.customGravityScale : 1.0f;
+            _currentVerticalVelocity += (gravity * gravScale) * Time.deltaTime;
 
             Vector3 verticalMovement = new Vector3(0f, _currentVerticalVelocity * Time.deltaTime, 0f);
             CollisionFlags flags = _characterController.Move(verticalMovement);
@@ -217,6 +217,7 @@ namespace SancaBGSPlatformer
             {
                 _thirdPersonController.isMovementLocked = false;
                 _thirdPersonController.ResetVerticalVelocity();
+                _thirdPersonController.ResetJumpTimeout();
             }
         }
     }

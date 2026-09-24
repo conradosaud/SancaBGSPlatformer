@@ -81,6 +81,7 @@ namespace StarterAssets
 
         // player
         [HideInInspector] public bool isMovementLocked = false;
+        [HideInInspector] public float customGravityScale = 1.0f;
         private float _speed;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
@@ -91,6 +92,21 @@ namespace StarterAssets
         public void ResetVerticalVelocity()
         {
             _verticalVelocity = 0.0f;
+        }
+
+        public float GetVerticalVelocity()
+        {
+            return _verticalVelocity;
+        }
+
+        public void SetVerticalVelocity(float velocity)
+        {
+            _verticalVelocity = velocity;
+        }
+
+        public void ResetJumpTimeout()
+        {
+            _jumpTimeoutDelta = JumpTimeout;
         }
 
         // timeout deltatime
@@ -164,6 +180,10 @@ namespace StarterAssets
 
             if (isMovementLocked)
             {
+                if (_input != null)
+                {
+                    _input.jump = false;
+                }
                 return;
             }
 
@@ -348,14 +368,14 @@ namespace StarterAssets
                     }
                 }
 
-                // if we are not grounded, do not jump
-                _input.jump = false;
+                // if we are not grounded, do not jump (kept true for air abilities like glide)
+                // _input.jump = false;
             }
 
             // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
             if (_verticalVelocity < _terminalVelocity)
             {
-                _verticalVelocity += Gravity * Time.deltaTime;
+                _verticalVelocity += (Gravity * customGravityScale) * Time.deltaTime;
             }
         }
 
