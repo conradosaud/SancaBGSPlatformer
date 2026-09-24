@@ -16,6 +16,9 @@ namespace SancaBGSPlatformer
         [Tooltip("Maximum duration in seconds to charge (further hold gives no additional force).")]
         public float maxChargeTime = 3.0f;
 
+        [Tooltip("Minimum press duration in seconds required to validate and start charging super jump.")]
+        public float minPressDuration = 0.08f;
+
         [Tooltip("Cooldown interval between consecutive super jumps.")]
         public float cooldown = 0.5f;
 
@@ -25,6 +28,13 @@ namespace SancaBGSPlatformer
 
         [Tooltip("Vertical jump height reached with maximum charge (3s).")]
         public float maxJumpHeight = 18.0f;
+
+        [Header("Animation Settings")]
+        [Tooltip("Crossfade transition duration into the Charge animation state.")]
+        public float chargeCrossFadeDuration = 0.15f;
+
+        [Tooltip("Crossfade transition duration into the InAir animation state.")]
+        public float inAirCrossFadeDuration = 0.1f;
 
         [Header("Runtime State")]
         public bool isCharging = false;
@@ -36,6 +46,7 @@ namespace SancaBGSPlatformer
         private ThirdPersonController _thirdPersonController;
         private StarterAssetsInputs _inputs;
         private GrappleHook _grappleHook;
+        private Animator _animator;
 
         private float _currentVerticalVelocity = 0.0f;
         private float _cooldownTimer = 0.0f;
@@ -47,10 +58,16 @@ namespace SancaBGSPlatformer
             _thirdPersonController = GetComponent<ThirdPersonController>();
             _inputs = GetComponent<StarterAssetsInputs>();
             _grappleHook = GetComponent<GrappleHook>();
+            _animator = GetComponent<Animator>();
         }
 
         private void Update()
         {
+            if (_animator == null)
+            {
+                _animator = GetComponent<Animator>();
+            }
+
             if (_grappleHook == null)
             {
                 _grappleHook = GetComponent<GrappleHook>();
@@ -92,36 +109,50 @@ namespace SancaBGSPlatformer
             {
                 if (_inputs != null && _inputs.superJump)
                 {
-                    if (!isCharging)
-                    {
-                        isCharging = true;
-                        currentChargeTime = 0.0f;
-                    }
-
                     currentChargeTime += Time.deltaTime;
 
-                    // Lock horizontal move and regular jump during charge
-                    if (_thirdPersonController != null)
+                    // Only activate charging state and lock movement once input is held past minPressDuration
+                    if (currentChargeTime >= minPressDuration)
                     {
-                        _thirdPersonController.isMovementLocked = true;
-                    }
-                    if (_inputs != null)
-                    {
-                        _inputs.move = Vector2.zero;
-                        _inputs.jump = false;
-                        _inputs.sprint = false;
+                        if (!isCharging)
+                        {
+                            isCharging = true;
+
+                            if (_animator != null)
+                            {
+                                _animator.CrossFadeInFixedTime("Charge", chargeCrossFadeDuration);
+                            }
+                        }
+
+                        // Lock horizontal move and regular jump during charge
+                        if (_thirdPersonController != null)
+                        {
+                            _thirdPersonController.isMovementLocked = true;
+                        }
+                        if (_inputs != null)
+                        {
+                            _inputs.move = Vector2.zero;
+                            _inputs.jump = false;
+                            _inputs.sprint = false;
+                        }
                     }
                     return;
                 }
             }
 
-            // When input is released after charging
-            if (isCharging)
+            // When input is released
+            if (isCharging || currentChargeTime > 0.0f)
             {
+                // Reset animator speed
+                if (_animator != null)
+                {
+                    _animator.speed = 1.0f;
+                }
+
                 // If button was released (superJump is false)
                 if (_inputs == null || !_inputs.superJump)
                 {
-                    if (currentChargeTime >= minChargeTime && isGrounded)
+                    if (isCharging && currentChargeTime >= minChargeTime && isGrounded)
                     {
                         PerformSuperJump();
                     }
@@ -149,6 +180,12 @@ namespace SancaBGSPlatformer
             hasUsedGrappleInAir = false;
             _airTime = 0.0f;
             _cooldownTimer = cooldown;
+
+            if (_animator != null)
+            {
+                _animator.speed = 1.0f;
+                _animator.CrossFadeInFixedTime("InAir", inAirCrossFadeDuration);
+            }
 
             if (_thirdPersonController != null)
             {
@@ -192,6 +229,11 @@ namespace SancaBGSPlatformer
         {
             isCharging = false;
             currentChargeTime = 0.0f;
+
+            if (_animator != null)
+            {
+                _animator.speed = 1.0f;
+            }
 
             if (!isSuperJumping && (_grappleHook == null || !_grappleHook.isGrappling))
             {

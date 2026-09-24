@@ -29,6 +29,7 @@ namespace SancaBGSPlatformer
         private ThirdPersonController _thirdPersonController;
         private StarterAssetsInputs _inputs;
         private SuperJump _superJump;
+        private Animator _animator;
         private Camera _mainCamera;
         private Vector3 _targetPoint;
 
@@ -38,6 +39,7 @@ namespace SancaBGSPlatformer
             _thirdPersonController = GetComponent<ThirdPersonController>();
             _inputs = GetComponent<StarterAssetsInputs>();
             _superJump = GetComponent<SuperJump>();
+            _animator = GetComponent<Animator>();
             _mainCamera = Camera.main;
 
             if (graspableLayer == 0)
@@ -51,6 +53,11 @@ namespace SancaBGSPlatformer
             if (_mainCamera == null)
             {
                 _mainCamera = Camera.main;
+            }
+
+            if (_animator == null)
+            {
+                _animator = GetComponent<Animator>();
             }
 
             if (_superJump == null)
@@ -118,6 +125,20 @@ namespace SancaBGSPlatformer
                 _thirdPersonController.isMovementLocked = true;
             }
 
+            // Play InAir animation for grapple travel
+            if (_animator != null)
+            {
+                _animator.speed = 1.0f;
+                _animator.Play("InAir", 0, 0f);
+            }
+
+            // Rotate character body immediately towards target point
+            Vector3 lookDirection = destination - transform.position;
+            if (lookDirection != Vector3.zero)
+            {
+                transform.rotation = Quaternion.LookRotation(lookDirection);
+            }
+
             // Clear movement/jump inputs
             if (_inputs != null)
             {
@@ -142,6 +163,18 @@ namespace SancaBGSPlatformer
 
             Vector3 direction = (_targetPoint - transform.position);
             float distance = direction.magnitude;
+
+            // Keep character facing target point while pulling
+            if (direction != Vector3.zero)
+            {
+                transform.rotation = Quaternion.LookRotation(direction);
+            }
+
+            // Keep InAir animation playing
+            if (_animator != null)
+            {
+                _animator.Play("InAir", 0);
+            }
 
             // Check if arrived at target
             if (distance <= stopDistance)

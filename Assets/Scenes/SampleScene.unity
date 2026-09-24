@@ -162,6 +162,8 @@ MonoBehaviour:
   cooldown: 0.5
   minJumpHeight: 1
   maxJumpHeight: 10
+  chargeCrossFadeDuration: 0.75
+  inAirCrossFadeDuration: 0.1
   isCharging: 0
   currentChargeTime: 0
   isSuperJumping: 0
