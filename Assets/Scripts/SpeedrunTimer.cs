@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 namespace SancaBGSPlatformer
 {
@@ -52,6 +53,7 @@ namespace SancaBGSPlatformer
         {
             LoadBestTime();
             UpdateTimerTextDisplay();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(transform.parent.GetComponent<RectTransform>());
         }
 
         private void Update()
