@@ -189,8 +189,9 @@ namespace SancaBGSPlatformer
 
             if (_thirdPersonController != null)
             {
-                _thirdPersonController.isMovementLocked = true;
-                _thirdPersonController.ResetVerticalVelocity();
+                _thirdPersonController.isMovementLocked = false;
+                _thirdPersonController.SetVerticalVelocity(_currentVerticalVelocity);
+                _thirdPersonController.Grounded = false;
             }
         }
 
@@ -198,28 +199,8 @@ namespace SancaBGSPlatformer
         {
             _airTime += Time.deltaTime;
 
-            // Clear other action inputs except camera / look and jump (needed for glide)
-            if (_inputs != null)
-            {
-                _inputs.move = Vector2.zero;
-                _inputs.sprint = false;
-            }
-
-            float gravity = (_thirdPersonController != null) ? _thirdPersonController.Gravity : -15.0f;
-            float gravScale = (_thirdPersonController != null) ? _thirdPersonController.customGravityScale : 1.0f;
-            _currentVerticalVelocity += (gravity * gravScale) * Time.deltaTime;
-
-            Vector3 verticalMovement = new Vector3(0f, _currentVerticalVelocity * Time.deltaTime, 0f);
-            CollisionFlags flags = _characterController.Move(verticalMovement);
-
-            // If player collides with ceiling or hits the ground on descent
-            if ((flags & CollisionFlags.Above) != 0 && _currentVerticalVelocity > 0f)
-            {
-                _currentVerticalVelocity = 0f;
-            }
-
             bool isGrounded = _thirdPersonController != null ? _thirdPersonController.Grounded : _characterController.isGrounded;
-            if (_airTime > 0.1f && isGrounded && _currentVerticalVelocity <= 0f)
+            if (_airTime > 0.1f && isGrounded && (_thirdPersonController == null || _thirdPersonController.GetVerticalVelocity() <= 0f))
             {
                 EndSuperJump();
             }
