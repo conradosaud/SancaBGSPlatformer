@@ -76,6 +76,24 @@ namespace SancaBGSPlatformer
             SetupLineRenderer();
         }
 
+        private void Start()
+        {
+            if (_mainCamera == null)
+            {
+                _mainCamera = Camera.main;
+            }
+
+            if (_animator == null)
+            {
+                _animator = GetComponent<Animator>();
+            }
+
+            if (_superJump == null)
+            {
+                _superJump = GetComponent<SuperJump>();
+            }
+        }
+
         private void SetupLineRenderer()
         {
             _lineRenderer = GetComponent<LineRenderer>();
@@ -109,20 +127,10 @@ namespace SancaBGSPlatformer
 
         private void Update()
         {
-            if (_mainCamera == null)
-            {
-                _mainCamera = Camera.main;
-            }
+            
 
-            if (_animator == null)
-            {
-                _animator = GetComponent<Animator>();
-            }
-
-            if (_superJump == null)
-            {
-                _superJump = GetComponent<SuperJump>();
-            }
+            if (_thirdPersonController.isTeleporting == true)
+                return;
 
             // Check for trigger input
             if (_inputs != null && _inputs.grapple)
