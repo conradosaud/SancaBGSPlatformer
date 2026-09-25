@@ -341,6 +341,8 @@ namespace StarterAssets
                     {
                         _animator.SetBool(_animIDJump, true);
                     }
+
+                    _jumpTimeoutDelta = JumpTimeout;
                 }
 
                 // jump timeout
@@ -367,15 +369,13 @@ namespace StarterAssets
                         _animator.SetBool(_animIDFreeFall, true);
                     }
                 }
-
-                // if we are not grounded, do not jump (kept true for air abilities like glide)
-                // _input.jump = false;
             }
 
-            // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
+            // apply gravity over time if under terminal (faster gravity when falling)
             if (_verticalVelocity < _terminalVelocity)
             {
-                _verticalVelocity += (Gravity * customGravityScale) * Time.deltaTime;
+                float fallMultiplier = (_verticalVelocity < 0.0f && customGravityScale >= 1.0f) ? 1.5f : 1.0f;
+                _verticalVelocity += (Gravity * customGravityScale * fallMultiplier) * Time.deltaTime;
             }
         }
 

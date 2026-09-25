@@ -57,6 +57,7 @@ namespace SancaBGSPlatformer
         private Vector3 _targetPoint;
         private Vector3 _currentRopeTip;
         private GameObject _hookHeadInstance;
+        private bool _hasValidTarget;
 
         private void Awake()
         {
@@ -163,9 +164,28 @@ namespace SancaBGSPlatformer
             // Center of screen / viewport ray
             Ray ray = _mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
-            if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, graspableLayer, QueryTriggerInteraction.Ignore))
+            // Raycast against any layer (~0), ignoring objects with "Player" tag or player's own colliders
+            RaycastHit[] hits = Physics.RaycastAll(ray, maxDistance, ~0, QueryTriggerInteraction.Ignore);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            bool foundValidHit = false;
+            foreach (var hit in hits)
             {
+                if (hit.collider.CompareTag("Player") || hit.transform.root == transform.root)
+                {
+                    continue;
+                }
+
+                _hasValidTarget = true;
                 StartShootingRope(hit.point);
+                foundValidHit = true;
+                break;
+            }
+
+            if (!foundValidHit)
+            {
+                _hasValidTarget = false;
+                StartShootingRope(ray.GetPoint(maxDistance));
             }
         }
 
@@ -224,11 +244,18 @@ namespace SancaBGSPlatformer
                 _lineRenderer.SetPosition(1, _currentRopeTip);
             }
 
-            // Reached target point -> Transition to Grappling / Pulling
+            // Reached target point -> Transition to Grappling/Pulling if valid surface hit, otherwise cancel and destroy hook
             if (Vector3.Distance(_currentRopeTip, _targetPoint) <= 0.05f)
             {
                 isShootingRope = false;
-                StartPullingPlayer();
+                if (_hasValidTarget)
+                {
+                    StartPullingPlayer();
+                }
+                else
+                {
+                    StopGrapple();
+                }
             }
         }
 

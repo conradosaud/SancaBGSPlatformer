@@ -43,7 +43,8 @@ namespace SancaBGSPlatformer
             bool isChargingSuperJump = _superJump != null && _superJump.isCharging;
 
             // Check if player is holding jump while falling/in air
-            bool canGlideInState = hasGlide && !isGrounded && !isGrappling && !isChargingSuperJump;
+            bool isFalling = _thirdPersonController == null || _thirdPersonController.GetVerticalVelocity() <= 0.1f;
+            bool canGlideInState = hasGlide && !isGrounded && isFalling && !isGrappling && !isChargingSuperJump;
             bool isJumpHeld = _inputs != null && _inputs.jump;
 
             if (canGlideInState && isJumpHeld)
