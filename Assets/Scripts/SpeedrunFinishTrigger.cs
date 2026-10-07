@@ -211,7 +211,7 @@ namespace SancaBGSPlatformer
         /// </summary>
         public void RestartGame()
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            SceneManager.LoadScene("SampleScene");
         }
 
         private IEnumerator RestartSceneRoutine()

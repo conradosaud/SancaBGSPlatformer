@@ -36,7 +36,7 @@ public class CheckPoint : MonoBehaviour
         if (other.gameObject.CompareTag("Check"))
         {
             // Handle collision with the checkpoint
-            transform.position = new Vector3(flag.transform.position.x, flag.transform.position.y, flag.transform.position.z);
+            transform.position = flag.transform.position;
         }
     }
 
