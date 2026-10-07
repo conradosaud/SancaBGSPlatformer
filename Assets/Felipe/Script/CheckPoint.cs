@@ -1,7 +1,9 @@
 using System;
+using Unity.Loading;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.iOS; // Namespace obrigatório para o novo Input System
+using UnityEngine.InputSystem.iOS;
+using UnityEngine.SceneManagement; // Namespace obrigatório para o novo Input System
 
 public class CheckPoint : MonoBehaviour
 {
@@ -14,6 +16,11 @@ public class CheckPoint : MonoBehaviour
 
     void Update()
     {
+        if (Keyboard.current.lKey.wasPressedThisFrame)
+        {
+            SceneManager.LoadScene("SampleScene");
+
+        }
         // Verifica se o teclado está conectado e se a tecla F foi pressionada neste frame
         if (transform.position.y <= -7)
         {
