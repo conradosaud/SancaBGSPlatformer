@@ -1,8 +1,6 @@
-using System;
-using Unity.Loading;
+
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.iOS;
 using UnityEngine.SceneManagement; // Namespace obrigatório para o novo Input System
 
 public class CheckPoint : MonoBehaviour

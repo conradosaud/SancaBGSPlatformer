@@ -1,4 +1,4 @@
-using Microsoft.Unity.VisualStudio.Editor;
+
 using UnityEngine;
 
 public class Hud_Icon : MonoBehaviour
@@ -14,10 +14,6 @@ public class Hud_Icon : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        
-    }
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Hook"))

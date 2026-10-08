@@ -13,12 +13,13 @@ public class Flag : MonoBehaviour
     void Update()
     {
         // Verifica se o teclado está conectado e se a tecla F foi pressionada neste frame
-        if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+        if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame))
         {
             if (player != null)
             {
                 transform.position = new Vector3(player.transform.position.x +1, player.transform.position.y+1, player.transform.position.z);
             }
         }
+
     }
 }
